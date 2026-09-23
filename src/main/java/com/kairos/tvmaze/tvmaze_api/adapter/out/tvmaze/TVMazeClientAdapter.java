@@ -1,10 +1,12 @@
 package com.kairos.tvmaze.tvmaze_api.adapter.out.tvmaze;
 
 import com.kairos.tvmaze.tvmaze_api.adapter.out.tvmaze.dto.TVMazeShowResponse;
+import com.kairos.tvmaze.tvmaze_api.domain.exception.ExternalServiceException;
 import com.kairos.tvmaze.tvmaze_api.domain.model.Show;
 import com.kairos.tvmaze.tvmaze_api.domain.port.out.TVMazeClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 
 import java.util.Arrays;
@@ -21,22 +23,29 @@ public class TVMazeClientAdapter implements TVMazeClient {
 
     @Override
     public List<Show> searchShows(String query) {
+        try {
+            TVMazeShowResponse[] response = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/search/shows")
+                            .queryParam("q", query)
+                            .build())
+                    .retrieve()
+                    .body(TVMazeShowResponse[].class);
 
-        TVMazeShowResponse[] response = restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/search/shows")
-                        .queryParam("q", query)
-                        .build())
-                .retrieve()
-                .body(TVMazeShowResponse[].class);
+            if (response == null) {
+                return List.of();
+            }
 
-        if (response == null) {
-            return List.of();
+            return Arrays.stream(response)
+                    .map(this::toDomain)
+                    .toList();
+        } catch (RestClientException exception) {
+
+            throw new ExternalServiceException(
+                    "TVMaze service is unavailable",
+                    exception
+            );
         }
-
-        return Arrays.stream(response)
-                .map(this::toDomain)
-                .toList();
     }
 
 
