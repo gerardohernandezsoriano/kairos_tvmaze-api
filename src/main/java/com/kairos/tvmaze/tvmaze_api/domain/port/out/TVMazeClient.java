@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface TVMazeClient {
     List<Show> searchShows(String query);
+    Show getShowById(Long showId);
 }

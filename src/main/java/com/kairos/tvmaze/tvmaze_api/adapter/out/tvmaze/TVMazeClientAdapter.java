@@ -2,6 +2,7 @@ package com.kairos.tvmaze.tvmaze_api.adapter.out.tvmaze;
 
 import com.kairos.tvmaze.tvmaze_api.adapter.out.tvmaze.dto.TVMazeShowResponse;
 import com.kairos.tvmaze.tvmaze_api.domain.exception.ExternalServiceException;
+import com.kairos.tvmaze.tvmaze_api.domain.exception.ShowNotFoundException;
 import com.kairos.tvmaze.tvmaze_api.domain.model.Show;
 import com.kairos.tvmaze.tvmaze_api.domain.port.out.TVMazeClient;
 import org.springframework.stereotype.Component;
@@ -39,6 +40,31 @@ public class TVMazeClientAdapter implements TVMazeClient {
             return Arrays.stream(response)
                     .map(this::toDomain)
                     .toList();
+        } catch (RestClientException exception) {
+
+            throw new ExternalServiceException(
+                    "TVMaze service is unavailable",
+                    exception
+            );
+        }
+    }
+
+    @Override
+    public Show getShowById(Long showId) {
+        try {
+            TVMazeShowResponse response = restClient.get()
+                    .uri("/shows/{showId}", showId)
+                    .retrieve()
+                    .body(TVMazeShowResponse.class);
+
+            if (response == null) {
+                throw new ShowNotFoundException(
+                        "Show not found: " + showId
+                );
+            }
+
+            return toDomain(response);
+
         } catch (RestClientException exception) {
 
             throw new ExternalServiceException(

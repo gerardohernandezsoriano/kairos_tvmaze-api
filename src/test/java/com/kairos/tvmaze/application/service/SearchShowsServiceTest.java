@@ -1,4 +1,4 @@
-package com.kairos.tvmaze.application.service.service;
+package com.kairos.tvmaze.application.service;
 
 import com.kairos.tvmaze.tvmaze_api.aplication.service.SearchShowsService;
 import com.kairos.tvmaze.tvmaze_api.domain.exception.ExternalServiceException;
