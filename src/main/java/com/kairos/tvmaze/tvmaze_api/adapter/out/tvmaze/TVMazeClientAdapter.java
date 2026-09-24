@@ -3,9 +3,11 @@ package com.kairos.tvmaze.tvmaze_api.adapter.out.tvmaze;
 import com.kairos.tvmaze.tvmaze_api.adapter.out.tvmaze.dto.TVMazeShowResponse;
 import com.kairos.tvmaze.tvmaze_api.domain.exception.ExternalServiceException;
 import com.kairos.tvmaze.tvmaze_api.domain.exception.ShowNotFoundException;
+import org.springframework.web.client.HttpClientErrorException;
 import com.kairos.tvmaze.tvmaze_api.domain.model.Show;
 import com.kairos.tvmaze.tvmaze_api.domain.port.out.TVMazeClient;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -64,6 +66,12 @@ public class TVMazeClientAdapter implements TVMazeClient {
             }
 
             return toDomain(response);
+
+        } catch (HttpClientErrorException.NotFound exception) {
+
+            throw new ShowNotFoundException(
+                    "Show not found: " + showId
+            );
 
         } catch (RestClientException exception) {
 
