@@ -1,8 +1,10 @@
 package com.kairos.tvmaze.application.service;
 
+import com.kairos.tvmaze.tvmaze_api.aplication.model.ShowSearchResult;
 import com.kairos.tvmaze.tvmaze_api.aplication.service.SearchShowsService;
 import com.kairos.tvmaze.tvmaze_api.domain.exception.ExternalServiceException;
 import com.kairos.tvmaze.tvmaze_api.domain.model.Show;
+import com.kairos.tvmaze.tvmaze_api.domain.port.out.CommentRepository;
 import com.kairos.tvmaze.tvmaze_api.domain.port.out.TVMazeClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -22,12 +25,14 @@ class SearchShowsServiceTest {
 
     @Mock
     private TVMazeClient tvMazeClient;
+    @Mock
+    private  CommentRepository commentRepository;
 
     private SearchShowsService searchShowsService;
 
     @BeforeEach
     void setUp() {
-        searchShowsService = new SearchShowsService(tvMazeClient);
+        searchShowsService = new SearchShowsService(tvMazeClient,commentRepository);
     }
 
     @Test
@@ -47,15 +52,20 @@ class SearchShowsServiceTest {
         when(tvMazeClient.searchShows(query))
                 .thenReturn(expectedShows);
 
-        List<Show> result = searchShowsService.search(query);
+        when(commentRepository.findByShowIds(List.of(1L)))
+                .thenReturn(Map.of());
+
+        List<ShowSearchResult> result = searchShowsService.search(query);
 
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().id()).isEqualTo(1L);
-        assertThat(result.getFirst().name()).isEqualTo("Batman");
-        assertThat(result.getFirst().channel()).isEqualTo("ABC");
+        assertThat(result.getFirst().show().id()).isEqualTo(1L);
+        assertThat(result.getFirst().show().name()).isEqualTo("Batman");
+        assertThat(result.getFirst().show().channel()).isEqualTo("ABC");
+        assertThat(result.getFirst().comments()).isEmpty();
 
         verify(tvMazeClient).searchShows(query);
+        verify(commentRepository).findByShowIds(List.of(1L));
     }
 
     @Test
@@ -64,7 +74,7 @@ class SearchShowsServiceTest {
 
         when(tvMazeClient.searchShows(query))
                 .thenReturn(List.of());
-        List<Show> result = searchShowsService.search(query);
+        List<ShowSearchResult> result = searchShowsService.search(query);
 
         assertThat(result).isEmpty();
 

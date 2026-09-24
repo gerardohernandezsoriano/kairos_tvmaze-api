@@ -1,6 +1,7 @@
 package com.kairos.tvmaze.tvmaze_api.adapter.out.mongodb.document;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "comments")
@@ -9,6 +10,7 @@ public class CommentDocument {
     @Id
     private String id;
 
+    @Indexed
     private Long showId;
 
     private String comment;

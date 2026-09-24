@@ -1,6 +1,7 @@
 package com.kairos.tvmaze.tvmaze_api.adapter.in.web;
 
 import com.kairos.tvmaze.tvmaze_api.adapter.in.web.dto.ShowResponse;
+import com.kairos.tvmaze.tvmaze_api.aplication.model.ShowSearchResult;
 import com.kairos.tvmaze.tvmaze_api.domain.model.Show;
 import com.kairos.tvmaze.tvmaze_api.domain.port.in.IGetShow;
 import com.kairos.tvmaze.tvmaze_api.domain.port.in.ISearchShows;
@@ -29,10 +30,9 @@ public class SearchController {
             @NotBlank(message = "Query must not be blank")
             String query) {
 
-        List<Show> shows = searchShows.search(query);
-
-        return shows.stream()
-                .map(ShowResponse::fromDomain)
+        return searchShows.search(query)
+                .stream()
+                .map(ShowResponse::fromSearchResult)
                 .toList();
     }
 

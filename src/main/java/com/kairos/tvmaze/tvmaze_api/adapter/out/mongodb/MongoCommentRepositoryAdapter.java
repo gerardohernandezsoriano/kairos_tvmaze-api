@@ -6,6 +6,10 @@ import com.kairos.tvmaze.tvmaze_api.domain.model.Comment;
 import com.kairos.tvmaze.tvmaze_api.domain.port.out.CommentRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Component
 public class MongoCommentRepositoryAdapter implements CommentRepository {
 
@@ -28,5 +32,21 @@ public class MongoCommentRepositoryAdapter implements CommentRepository {
         );
 
         repository.save(document);
+    }
+    @Override
+    public Map<Long, List<Comment>> findByShowIds(List<Long> showIds) {
+
+        return repository.findByShowIdIn(showIds)
+                .stream()
+                .map(this::toDomain)
+                .collect(Collectors.groupingBy(Comment::showId));
+    }
+
+    private Comment toDomain(CommentDocument document) {
+        return new Comment(
+                document.getShowId(),
+                document.getComment(),
+                document.getRating()
+        );
     }
 }
