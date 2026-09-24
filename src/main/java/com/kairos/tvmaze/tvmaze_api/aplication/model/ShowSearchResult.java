@@ -9,4 +9,7 @@ public record ShowSearchResult(
         Show show,
         List<Comment> comments
 ) {
+    public static ShowSearchResult fromShow(Show show) {
+        return new ShowSearchResult(show, List.of());
+    }
 }

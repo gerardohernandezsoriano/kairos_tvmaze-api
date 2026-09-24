@@ -1,6 +1,7 @@
 package com.kairos.tvmaze.tvmaze_api.adapter.in.web;
-import com.kairos.tvmaze.tvmaze_api.aplication.model.ShowDetailResult;
 
+import com.kairos.tvmaze.tvmaze_api.aplication.model.ShowSearchResult;
+import com.kairos.tvmaze.tvmaze_api.aplication.model.ShowDetailResult;
 import com.kairos.tvmaze.tvmaze_api.domain.model.Comment;
 import com.kairos.tvmaze.tvmaze_api.domain.model.Show;
 import com.kairos.tvmaze.tvmaze_api.domain.port.in.IGetShow;
@@ -31,7 +32,7 @@ class SearchControllerTest {
     private IGetShow getShow;
 
     @Test
-    void shouldReturnShowWithComments() throws Exception {
+    void shouldReturnShowsWithComments() throws Exception {
 
         Long showId = 1L;
 
@@ -72,5 +73,42 @@ class SearchControllerTest {
                 .andExpect(jsonPath("$.comments[0].rating").value(5))
                 .andExpect(jsonPath("$.comments[1].comment").value("Very good"))
                 .andExpect(jsonPath("$.comments[1].rating").value(4));
+    }
+
+    @Test
+    void shouldReturnShowsFromSearchWithoutComments() throws Exception {
+
+        Show batman = new Show(
+                1L,
+                "Batman",
+                "ABC",
+                "A superhero show",
+                List.of("Action", "Drama")
+        );
+
+        when(searchShows.search("batman"))
+                .thenReturn(List.of(
+                        ShowSearchResult.fromShow(batman)
+                ));
+
+        mockMvc.perform(
+                        get("/shows/search")
+                                .param("query", "batman")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].name").value("Batman"))
+                .andExpect(jsonPath("$[0].channel").value("ABC"))
+                .andExpect(jsonPath("$[0].comments").isEmpty());
+    }
+
+    @Test
+    void shouldRejectSearchWithoutQuery() throws Exception {
+
+        mockMvc.perform(
+                        get("/shows/search")
+                )
+                .andExpect(status().isBadRequest());
     }
 }
