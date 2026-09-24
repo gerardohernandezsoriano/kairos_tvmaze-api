@@ -10,4 +10,5 @@ public interface CommentMongoRepository
         extends MongoRepository<CommentDocument, String> {
 
     List<CommentDocument> findByShowIdIn(List<Long> showIds);
+    List<CommentDocument> findByShowId(Long showId);
 }

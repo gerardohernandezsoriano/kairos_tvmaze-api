@@ -1,5 +1,6 @@
 package com.kairos.tvmaze.tvmaze_api.adapter.in.web.dto;
 
+import com.kairos.tvmaze.tvmaze_api.aplication.model.ShowDetailResult;
 import com.kairos.tvmaze.tvmaze_api.aplication.model.ShowSearchResult;
 import com.kairos.tvmaze.tvmaze_api.domain.model.Show;
 
@@ -25,17 +26,27 @@ public record ShowResponse(
         );
     }
 
-    public static ShowResponse fromSearchResult(
-            ShowSearchResult result
-    ) {
+    public static ShowResponse fromShowDetailResult(ShowDetailResult result) {
         return new ShowResponse(
                 result.show().id(),
                 result.show().name(),
                 result.show().channel(),
                 result.show().summary(),
                 result.show().genres(),
-                result.comments()
-                        .stream()
+                result.comments().stream()
+                        .map(CommentResponse::fromDomain)
+                        .toList()
+        );
+    }
+
+    public static ShowResponse fromSearchResult(ShowSearchResult result) {
+        return new ShowResponse(
+                result.show().id(),
+                result.show().name(),
+                result.show().channel(),
+                result.show().summary(),
+                result.show().genres(),
+                result.comments().stream()
                         .map(CommentResponse::fromDomain)
                         .toList()
         );

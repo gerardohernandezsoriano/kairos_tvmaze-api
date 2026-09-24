@@ -49,4 +49,11 @@ public class MongoCommentRepositoryAdapter implements CommentRepository {
                 document.getRating()
         );
     }
+    @Override
+    public List<Comment> findByShowId(Long showId) {
+        return repository.findByShowId(showId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
 }

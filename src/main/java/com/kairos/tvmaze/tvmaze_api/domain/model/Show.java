@@ -8,5 +8,6 @@ public record Show(
         String channel,
         String summary,
         List<String> genres
+
 ) {
 }

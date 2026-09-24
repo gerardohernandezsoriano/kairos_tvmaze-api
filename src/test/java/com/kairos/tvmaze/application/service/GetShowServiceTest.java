@@ -1,8 +1,11 @@
 package com.kairos.tvmaze.application.service;
 
+import com.kairos.tvmaze.tvmaze_api.aplication.model.ShowDetailResult;
 import com.kairos.tvmaze.tvmaze_api.aplication.service.GetShowService;
 import com.kairos.tvmaze.tvmaze_api.domain.exception.ExternalServiceException;
+import com.kairos.tvmaze.tvmaze_api.domain.model.Comment;
 import com.kairos.tvmaze.tvmaze_api.domain.model.Show;
+import com.kairos.tvmaze.tvmaze_api.domain.port.out.CommentRepository;
 import com.kairos.tvmaze.tvmaze_api.domain.port.out.ShowCache;
 import com.kairos.tvmaze.tvmaze_api.domain.port.out.TVMazeClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,24 +19,32 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class GetShowServiceTest {
+
     @Mock
     private TVMazeClient tvMazeClient;
 
     @Mock
     private ShowCache showCache;
 
+    @Mock
+    private CommentRepository commentRepository;
+
     private GetShowService getShowService;
 
     @BeforeEach
     void setUp() {
-        getShowService = new GetShowService(tvMazeClient,showCache);
+        getShowService = new GetShowService(
+                tvMazeClient,
+                showCache,
+                commentRepository
+        );
     }
 
     @Test
@@ -49,26 +60,37 @@ public class GetShowServiceTest {
                 List.of("Action", "Drama")
         );
 
+        List<Comment> comments = List.of(
+                new Comment(showId, "Great show", 5)
+        );
+
+        when(showCache.findById(showId))
+                .thenReturn(Optional.empty());
+
         when(tvMazeClient.getShowById(showId))
                 .thenReturn(expectedShow);
 
-        Show result = getShowService.getShowById(showId);
+        when(commentRepository.findByShowId(showId))
+                .thenReturn(comments);
+
+        ShowDetailResult result = getShowService.getShowById(showId);
 
         assertThat(result).isNotNull();
-        assertThat(result.id()).isEqualTo(1L);
-        assertThat(result.name()).isEqualTo("Batman");
-        assertThat(result.channel()).isEqualTo("ABC");
-        assertThat(result.summary())
-                .isEqualTo("A superhero show");
-        assertThat(result.genres())
-                .containsExactly("Action", "Drama");
+        assertThat(result.show()).isEqualTo(expectedShow);
+        assertThat(result.comments()).isEqualTo(comments);
 
         verify(tvMazeClient).getShowById(showId);
+        verify(showCache).save(expectedShow);
+        verify(commentRepository).findByShowId(showId);
     }
 
     @Test
     void shouldPropagateExternalServiceException() {
+
         Long showId = 1L;
+
+        when(showCache.findById(showId))
+                .thenReturn(Optional.empty());
 
         when(tvMazeClient.getShowById(showId))
                 .thenThrow(
@@ -85,10 +107,16 @@ public class GetShowServiceTest {
 
         verify(tvMazeClient).getShowById(showId);
 
+        verify(showCache, never())
+                .save(any());
+
+        verify(commentRepository, never())
+                .findByShowId(any());
     }
 
     @Test
     void shouldReturnShowFromCacheWhenItExists() {
+
         Long showId = 1L;
 
         Show cachedShow = new Show(
@@ -99,12 +127,23 @@ public class GetShowServiceTest {
                 List.of("Action", "Drama")
         );
 
+        List<Comment> comments = List.of(
+                new Comment(showId, "Excellent", 5)
+        );
+
         when(showCache.findById(showId))
                 .thenReturn(Optional.of(cachedShow));
 
-        Show result = getShowService.getShowById(showId);
+        when(commentRepository.findByShowId(showId))
+                .thenReturn(comments);
 
-        assertThat(result).isEqualTo(cachedShow);
+        ShowDetailResult result = getShowService.getShowById(showId);
+
+        assertThat(result.show())
+                .isEqualTo(cachedShow);
+
+        assertThat(result.comments())
+                .isEqualTo(comments);
 
         verify(showCache).findById(showId);
 
@@ -113,6 +152,9 @@ public class GetShowServiceTest {
 
         verify(showCache, never())
                 .save(any());
+
+        verify(commentRepository)
+                .findByShowId(showId);
     }
 
     @Test
@@ -128,24 +170,35 @@ public class GetShowServiceTest {
                 List.of("Action", "Drama")
         );
 
+        List<Comment> comments = List.of(
+                new Comment(showId, "Very good", 4)
+        );
+
         when(showCache.findById(showId))
                 .thenReturn(Optional.empty());
 
         when(tvMazeClient.getShowById(showId))
                 .thenReturn(show);
 
-        Show result = getShowService.getShowById(showId);
+        when(commentRepository.findByShowId(showId))
+                .thenReturn(comments);
 
-        assertThat(result).isEqualTo(show);
+        ShowDetailResult result = getShowService.getShowById(showId);
+
+        assertThat(result.show())
+                .isEqualTo(show);
+
+        assertThat(result.comments())
+                .isEqualTo(comments);
 
         verify(showCache).findById(showId);
         verify(tvMazeClient).getShowById(showId);
         verify(showCache).save(show);
+        verify(commentRepository).findByShowId(showId);
     }
 
     @Test
     void shouldNotCacheWhenTvMazeFails() {
-
 
         Long showId = 1L;
 
@@ -169,5 +222,8 @@ public class GetShowServiceTest {
 
         verify(showCache, never())
                 .save(any());
+
+        verify(commentRepository, never())
+                .findByShowId(any());
     }
 }

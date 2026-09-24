@@ -8,6 +8,6 @@ import java.util.Map;
 public interface CommentRepository {
 
     void save(Comment comment);
-
     Map<Long, List<Comment>> findByShowIds(List<Long> showIds);
+    List<Comment> findByShowId(Long showId);
 }

@@ -1,8 +1,7 @@
 package com.kairos.tvmaze.tvmaze_api.adapter.in.web;
 
 import com.kairos.tvmaze.tvmaze_api.adapter.in.web.dto.ShowResponse;
-import com.kairos.tvmaze.tvmaze_api.aplication.model.ShowSearchResult;
-import com.kairos.tvmaze.tvmaze_api.domain.model.Show;
+import com.kairos.tvmaze.tvmaze_api.aplication.model.ShowDetailResult;
 import com.kairos.tvmaze.tvmaze_api.domain.port.in.IGetShow;
 import com.kairos.tvmaze.tvmaze_api.domain.port.in.ISearchShows;
 import jakarta.validation.constraints.NotBlank;
@@ -15,7 +14,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/shows")
 @Validated
-public class SearchController {
+public  class SearchController {
+
     private final ISearchShows searchShows;
     private final IGetShow getShow;
 
@@ -28,8 +28,8 @@ public class SearchController {
     public List<ShowResponse> search(
             @RequestParam
             @NotBlank(message = "Query must not be blank")
-            String query) {
-
+            String query
+    ) {
         return searchShows.search(query)
                 .stream()
                 .map(ShowResponse::fromSearchResult)
@@ -42,8 +42,8 @@ public class SearchController {
             @Positive(message = "Show ID must be positive")
             Long showId) {
 
-        Show show = getShow.getShowById(showId);
+        ShowDetailResult show = getShow.getShowById(showId);
 
-        return ShowResponse.fromDomain(show);
+        return ShowResponse.fromShowDetailResult(show);
     }
 }
