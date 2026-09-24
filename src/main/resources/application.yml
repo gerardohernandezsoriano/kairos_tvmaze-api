@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: tvmaze-api
+
+  # Esta es la estructura correcta para Spring Boot 3.x
+  mongodb:
+    uri: "${MONGODB_URI}"
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+tvmaze:
+  base-url: https://tvmaze.com
+  cache:
+    ttl-seconds: ${TVMAZE_CACHE_TTL_SECONDS:3600}
